@@ -4,7 +4,7 @@
 #include<iostream>
 #include <time.h>
 
-    using namespace std;
+using namespace std;
 int a[1024][2048];
 int b[2048][1024];
 int c[1024][1024];
