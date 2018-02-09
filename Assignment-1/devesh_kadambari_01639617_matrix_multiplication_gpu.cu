@@ -1,4 +1,5 @@
 /*I have taken the help of lzhengchun/matrix-cuda github repository to get this code working.*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
