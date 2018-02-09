@@ -25,7 +25,6 @@ int main(int argc, char const *argv[])
 {
     int m_rows, n_col_row, k_col;
    
-    srand(3333);
     printf("please type in A=mxn B=nxk \n");
     scanf("%d %d %d", &m_rows, &n_col_row, &k_col);
     int *h_a_cpu, *h_b_cpu, *h_c_cpu, *h_cc_cpu;
