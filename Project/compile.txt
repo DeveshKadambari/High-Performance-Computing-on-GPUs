@@ -1,0 +1,7 @@
+**compile OpenCV**
+
+ g++ -ggdb convolution.cpp -o convolution `pkg-config --cflags --libs opencv`
+
+**debug OpenCV**
+
+./convolution cat.jpg
