@@ -16,36 +16,50 @@ using namespace cv;
 /*functions*/
 void convolution(int org_n,int *org,int *out,int fil_f,int *fil,int pad,int str,int n_fil);
 void filter(int *size,int *fil,int n_fil);
-void fully_connected(int out_n,int *in,int *out,int fil_f,int *fil,int *y);
+//void fully_connected(int out_n,int *in,int *out,int fil_f,int *fil,int *y);
 void softmax(int *in,int *out);
 void loss_function(int *predicted,int *truth,double *MSE);
-void back_propagation(int *out,int *target,int *max_fil,int *fil_f,int *fil_out,int *fil_1,int *fil_0,int *out_1,int *out_2);
+void back_propagation(int *b,int *out,int *target,int max_fil,int fil_f,int *fil_out,int *fil_1,int *fil_0,int *out_1,int *out_2);
 /*main thread*/
 int main( int argc, const char** argv )
 {
 cout<<"hi_beginning"<<endl;
 Mat img;
-int *org_o,*out_1,*fil__f;
+int *org_o,*out_1,*fil__f,*out;
 img=imread(argv[1], CV_LOAD_IMAGE_COLOR);
 imshow("hello",img);
 unsigned char *org = (unsigned char*)(img.data);		// getting the image BGR data into char array(0->225) with 3 channels 
 cout<<"hi_before_separating_b_g_r"<<endl;
-int i,k,*r,*g,*b;
+
+int i,k,*b;
+
 int green=img.rows*img.rows;
 int red= green*green;
-int *fil_0,*fil_1,*fil_out;
+int *fil_0,*fil_1,*fil_out,fil_f=5;
+cout<<"hi"<<endl;
 fil_0=(int*) malloc(sizeof(int)*fil_f*fil_f*5);
 fil_1=(int*) malloc(sizeof(int)*fil_f*fil_f*5);
-out_1=(int*) malloc(sizeof(int)*koo*koo*5);
+
 int koo=img.rows-fil_f;
+out_1=(int*) malloc(sizeof(int)*koo*koo*5);
 int *out_2;
 int foo= koo-fil_f;
 out_2=(int*) malloc(sizeof(int)*foo*foo*5);
 fil_out=(int*) malloc(sizeof(int)*fil_f*fil_f*5);
-int poo=foo-filf_f;
+int poo=foo-fil_f;
 out=(int*) malloc(sizeof(int)*poo*poo*4);
 double *MSE;
 MSE=(double*) malloc(sizeof(double)*1);
+int *truth;
+truth=(int*) malloc(sizeof(int)*4);
+for(int i=0;i<4;i++)
+{
+if(i==2){
+truth[i]=1;
+}
+else
+truth[i]=0;
+}
 /*input layer 1*/
 b=(int*) malloc(sizeof(int)*img.rows*img.cols+green+red);
 cout<<"allocation"<<endl;
@@ -74,9 +88,10 @@ convolution(koo, out_1,out_2,fil_f,fil_1,0,1,5);
 convolution(foo, out_2,out,fil_f,fil_out,0,1,4);
 softmax(out,out);
 loss_function(out,truth,MSE);						//Truth not declared
-back_propagation(out,truth,max_fil,*fil_f,fil_out,fil_1,fil_0,out_1,out_2);
+int max_fil=fil_f*fil_f*fil_f;
+back_propagation(b,out,truth,max_fil,fil_f,fil_out,fil_1,fil_0,out_1,out_2);
 }
-while(out >= 0.5*truth);
+while(out[2] >= 0.5*truth[2]);
 
 waitKey(0);
 
@@ -152,7 +167,7 @@ p=fil_f*fil_f;
 }
 }
 /*full connected layer*/
-
+/*
 void fully_connected(int out_n,int *in,int *out,int fil_f,int *fil,int *y)
 {
 for(int k=0;k<out_size;k++)
@@ -164,42 +179,45 @@ for(int k=0;k<out_size;k++)
 }
 
 }
-
+*/
 /*softmax layer*/
 
 void softmax(int *in,int *out)
 {
-double *t,*sum;
+double *t,sum;
 t=(double*) malloc(sizeof(double)*4*4);
+
 for(int i=0;i<4;i++)
 {
 t[i]=exp(in[i]);
-sum+=t[i];
+sum=sum + t[i];
 
 }
 for(int i=0;i<4;i++)
 {
-out[i]=(int*)(t[i]/sum);
+out[i]=(t[i]/sum);
 }
 }
 
 /*loss function*/
 void loss_function(int *predicted,int *truth,double *MSE)
-{int k;
+{int k,joo;
 for(int i=0;i<4;i++)
 {
-k=predicted[i]-truth[i];
-MSE+=(1/4(pow(k, 2));
+k=(predicted[i]-truth[i]);
+joo=pow(k, 2);
+MSE+=1/4*joo;
 }
 
 }
 /*back propagation*/
-void back_propagation(int *out,int *target,int *max_fil,int *fil_f,int *fil_out,int *fil_1,int *fil_0,int *out_1,int *out_2)
+void back_propagation(int *b,int *out,int *target,int max_fil,int fil_f,int *fil_out,int *fil_1,int *fil_0,int *out_1,int *out_2)
 {
-int eta=0.1;
+int eta=0.1,p=0;
 /*This is for last filter fil_out */
 for(int n=0;n<max_fil;n++)
-{int dE_dw=(out[n]-target[n])*(softmax(out[n])*(1-softmax(out[n])))*out_2[n];
+{
+int dE_dw=(out[n]-target[n])*(out[n]*(1-out[n]))*out_2[n];
  for (int i = 0; i <fil_f; ++i) {
         for (int j = 0; j < fil_f; ++j) {
             fil_out[i * fil_f + j+p] = fil_out[i * fil_f + j+p]-(eta*dE_dw) ;
@@ -211,12 +229,12 @@ p=fil_f*fil_f;
 /*This is for last filter fil_1 dEtotal/dwh2 = dE_total/dout_h2 *dout_h2/dnet_h2 * dnet_h2/dw_h2 */
 int dE_dw,dE_dw_0;
 for(int n=0;n<max_fil;n++)
-{ int dE-01_dout_h2=(predicted[n]-target[n])*(softmax(out[n])*(1-softmax(out[n])))*fil_out[n];
+{ int dE_1_dout_h2=(out[n]-target[n])*(out[n])*(1-out[n])*fil_out[n];
    p=fil_f*fil_f;
- int dE-02_dout_h2=(predicted[n+1]-target[n+1])*(softmax(out[n+1])*(1-softmax(out[n+1])))*fil_out[n+p+1];
- int dE-03_dout_h2=(predicted[n+2]-target[n+2])*(softmax(out[n+2])*(1-softmax(out[n+2])))*fil_out[n+2p+2];
- int dE-04_dout_h2=(predicted[n+3]-target[n+3])*(softmax(out[n+3])*(1-softmax(out[n+3])))*fil_out[n+3p+3];
-int dEtotal_dout_h2=dE-01_dout_h2+dE-02_dout_h2+dE-03_dout_h2+dE-04_dout_h2;
+ int dE_2_dout_h2=(out[n+1]-target[n+1])*(out[n+1]*(1-out[n+1]))*fil_out[n+p+1];
+ int dE_3_dout_h2=(out[n+2]-target[n+2])*(out[n+2]*(1-out[n+2]))*fil_out[n+(2*p)+2];
+ int dE_4_dout_h2=(out[n+3]-target[n+3])*(out[n+3]*(1-out[n+3]))*fil_out[n+(3*p)+3];
+int dEtotal_dout_h2=dE_1_dout_h2+dE_2_dout_h2+dE_3_dout_h2+dE_4_dout_h2;
  for (int i = 0; i <fil_f; ++i) {
         for (int j = 0; j < fil_f; ++j) {
 		dE_dw=dEtotal_dout_h2*1*out_1[i * fil_f + j+p];
